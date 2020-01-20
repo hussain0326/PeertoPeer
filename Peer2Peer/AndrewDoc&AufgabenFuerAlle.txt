@@ -1,0 +1,64 @@
+//Scheduler
+
+Aufgabe:
+
+Server schickt alle 20 Sekunden über Scheduler ping an Peer mit MSgtype, 
+Peer muss diesen erkennen und wenn möglich/online antworten
+
+Leader muss Liste an alle anderen Server aktualisieren können
+
+--> wenn Peer nicht antwortet wird der Peer vom Server aus der List entfernt
+Liste liegt in Zeile peerArrayList vom Typ PeerObjekt in Zeile 31
+
+Sebastian hat im Master Chat-Möglichkeit zwischen einem Peer und dem Server
+
+Sebastian sagt, Malte hat Server gestartet und Kommunikation war erfolgreich
+
+Aufgaben verteilen, 3/4er Gruppen sollen jeder ne eigene Version vom Scheduler und von der Listenverteilung implementieren
+
+
+
+Dokumentation Server.java ___________________________________________________
+
+var clientZaehler arbeitet nicht, überflüssig
+Thread anfrageThread - erstell für AnfrageHandler einen Thread, mit dem später alle Arten von Anfragen bearbeitet werden
+
+PeerObjekt peerObj - ist der Leader, der allererste Knoten in der Nodelist. Steht ganz oben als "Knoten1"
+ArrayList<PeerObjekt> peerArrayList - ArrayList in der alle Peers, die dazu komme gespeichert werden
+
+public Server() - 
+	- udpPort = 1337 - ist ist ja wohl selbstverständlich
+	- peerArrayList = new ArrayList<PeerObjekt>() - Peerliste wird erzeugt, alle Peers werden dort gespeichert !!!! Funktioniert
+	- DatagramSocket serverSocket = new DatagramSocket(udpPort) - Das UDP-Socket wird hier erzeugt, dient zur Kommunikation des
+	  Servers mit den Peers und zum empfangen der Nachrichten
+	- anfrageHandler = new AnfrageHandler(serverSocket);
+    	  anfrageThread = new Thread(anfrageHandler);
+    	  anfrageThread.start() - Thread zum empfangen und bearbeiten von Nachrichten
+		Methoden: 
+			"1" - Überprüft Peer in Liste vorhanden, wenn vorhanden Liste zugesendet
+			Wenn nicht vorhanden, Peer zu Liste und Liste senden
+			
+			"2" - Peer wird von Liste gelöscht
+public void aktuelleListeVersenden(byte[] sendData, InetAddress IPAddress, int clientSrcPort)
+	- Erzeugt langen String, wandelt mit sendDate diesen in ByteArray um, senden diesen dann über sendPacket
+	- Foreach-Schleife zum Ausgeben der Liste in der Peer ArrayList, wird am Server zur Kontrolle ausgegeben, wird allerdings auch an den Peer geschickt
+	- Die Gesamte PeerListe wird hier als ein einziges Package versendet, mithilfe der foreach-Schleife
+	  und dem String peerName
+
+public void peerAbmelden(int abmeldePort)
+	- Geht mit foreach durch die PeerList durch und removed den Peer
+
+public void run()
+	- erzeugt die receiveData und sendData Byte-Arrays
+	- Bestätigt das Starten des Servers
+	- innerhalb der while(true)
+		- DatagramPacket receivePacket = new DatagramPacket(receiveData, receiveData.length) - erzeugt neues DatagramPackage it den empfangenen Daten
+		- versucht das Paket zu empfangen, throwed exception
+		- String sentence = new String(receivePacket.getData(), 0, receivePacket.getLength()) - Der vom Peer gesendete String wird hier gespeichert
+		- Die IPAddresse und der Port werden gespeichert
+		- Bestätigung mit Request, von welchem Client die Nachricht kam !!!Funktioniert
+		- Ab Zeile 145 bis Switch : Eigentlich Überflüssig, Fehlerabfangen von falschen Eingaben
+		- Der Switch-Case Bearbeitet die Anfragen vom Peer mit den empfangenen "sentences"
+		  1 ist Eintragen in die Liste, 2 ist Abmelden von der Liste
+	
+Dokumentation Peer.java ____________________________________________
